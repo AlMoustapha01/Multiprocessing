@@ -38,3 +38,18 @@ class CompteViewById(generics.GenericAPIView,mixins.ListModelMixin,mixins.Create
 
     def delete(self,request,id=None):
         return self.destroy(request,id)
+
+class CompteViewByTelephone(generics.GenericAPIView,mixins.ListModelMixin,mixins.CreateModelMixin,mixins.RetrieveModelMixin,mixins.UpdateModelMixin,mixins.DestroyModelMixin):
+    serializer_class= CompteSerializer
+    queryset = Compte.objects.all()
+
+    lookup_field= "telephone"
+
+    def get(self,request,telephone=None):
+        return self.retrieve(request)
+    
+    def put(self,request,telephone=None):
+        return self.update(request,telephone)
+
+    def delete(self,request,telephone=None):
+        return self.destroy(request,telephone)

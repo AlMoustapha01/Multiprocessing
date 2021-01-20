@@ -4,11 +4,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 # importing views from views..py 
-from .views import login_view,logout_view ,register_view,stocks_view,refresh, ArticleView,ArticleViewById
+from .views import login_view,logout_view ,register_view,stocks_view, ArticleView,ArticleViewById
 urlpatterns = [ 
     path('login', login_view), 
     path('logout', logout_view),
-    path('refresh',refresh), 
     path('register', register_view), 
     path('stocks', stocks_view), 
     path('api/articles/',ArticleView.as_view(),name='Articles'),
