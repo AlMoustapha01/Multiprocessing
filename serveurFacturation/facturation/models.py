@@ -9,8 +9,9 @@ class Ordre(models.Model):
     produit =  models.CharField(max_length=255, blank=True, null=True)
     prix =  models.IntegerField(blank=True, null=True)
     total=  models.IntegerField(blank=True, null=True)
+    status = models.CharField(max_length=255, blank=True, null=True)
     date_add = models.DateTimeField(auto_now_add=True, blank=True)
 
     class Meta:
         managed= 'True'
-        db_table = 'compte'
+        db_table = 'ordre'

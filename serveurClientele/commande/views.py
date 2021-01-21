@@ -4,6 +4,8 @@ from rest_framework import mixins,views
 from rest_framework import generics
 from rest_framework import viewsets, status
 from django.contrib.auth.models import User
+from .models import Ordre
+from .serializers import OrdreSerializer
 from django.contrib.auth import authenticate, login,logout
 from django.contrib.auth.decorators import login_required
 import pika
@@ -12,6 +14,32 @@ import datetime
 import requests
 from django.conf import settings
 # Create your views here.
+
+class OrdreView(generics.GenericAPIView,mixins.ListModelMixin,mixins.CreateModelMixin,mixins.RetrieveModelMixin,mixins.UpdateModelMixin,mixins.DestroyModelMixin):
+    serializer_class= OrdreSerializer
+    queryset = Ordre.objects.all()
+    lookup_field='id'
+
+    def get(self,request):
+        return self.list(request)
+
+    def post(self,request):
+        return self.create(request)
+
+class OrdreViewById(generics.GenericAPIView,mixins.ListModelMixin,mixins.CreateModelMixin,mixins.RetrieveModelMixin,mixins.UpdateModelMixin,mixins.DestroyModelMixin):
+    serializer_class= OrdreSerializer
+    queryset = Ordre.objects.all()
+
+    lookup_field='id'
+
+    def get(self,request,id=None):
+        return self.retrieve(request)
+    
+    def put(self,request,id=None):
+        return self.update(request,id)
+
+    def delete(self,request,id=None):
+        return self.destroy(request,id)
 def login_view(request): 
     # create a dictionary to pass
     if (request.POST):
@@ -96,7 +124,9 @@ def commande_view(request):
         user= user_by_id(elt['user'])
         article= article_by_id(elt['produit'])
         stocks=article['quantite']>elt['quantite']
-        verification = requests.post("http://127.0.0.1:3000/api/verification",{'telephone':elt['telephone'],'total':total(elt['prix'],elt['quantite'])})
+
+        #verification = requests.post("http://127.0.0.1:3000/api/verification/",{'telephone':elt['telephone'],'total':total(elt['prix'],elt['quantite'])})
+        
         small={
             'nom':user['nom'],
             'prenom':user['prenom'],
@@ -106,10 +136,16 @@ def commande_view(request):
             'date':elt['date_add'],
             'telephone':elt['telephone'],
             'stock': stocks,
-            'verification':verification.text
+            'verification':'possible'
         }
-        send = json.dumps({'telephone':elt['telephone'],'total':total(elt['prix'],elt['quantite'])})
-        
+        ordre= Ordre()
+        ordre.nom=user['nom']
+        ordre.prenom = user['prenom']
+        ordre.prix=elt['prix']
+        ordre.telephone=elt['telephone']
+        ordre.total= total(elt['prix'],elt['quantite'])
+        ordre.produit=article['intitule']
+        ordre.save()
 
         big_data.append(small)
     print(big_data)

@@ -9,6 +9,7 @@ from rest_framework import viewsets, status
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login,logout
 from django.contrib.auth.decorators import login_required
+from rest_framework.views import APIView
 import pika
 import json 
 import datetime
@@ -48,7 +49,8 @@ def banque(telephone):
     return data
 
 from rest_framework.decorators import api_view
-@api_view(['GET', 'POST'])
+
+@api_view(['POST'])
 def verification_banque(request):
     """
     List all code snippets, or create a new snippet.
@@ -56,6 +58,7 @@ def verification_banque(request):
    
     if request.method == 'POST':
         data= request.data
+        print(request.data)
         telephone=data['telephone']
         banq = banque(telephone)
         if data['total']>banq['solde']:
@@ -66,3 +69,28 @@ def verification_banque(request):
             url ='http://localhost:4000/api/comptes/telephone/'+str(telephone)
             achat = requests.put(url,{'nom':banq['nom'],'prenom':banq['prenom'],'email':banq['email'],'telephone':banq['telephone'],'solde':solde})
             return Response({'status':'possible'})
+
+def verification_banque(request):
+    url='http://localhost:5000/api/ordres/'
+    data= requests.get(url).json()
+    if(len(data)>len(list(Ordre.objects.all()))):
+
+        for elt in data:
+            ordre = Ordre()
+            banq = banque(elt['telephone'])
+            ordre.nom = elt['nom']
+            ordre.prenom= elt['prenom']
+            ordre.telephone= elt['telephone']
+            ordre.total =elt['total']
+            ordre.produit= elt['produit']
+            ordre.prix= elt['prix']
+            if elt['total']>banq['solde']:
+                ordre.status= 'impossible'
+            else:
+                solde= banq['solde']-elt['total']
+                url ='http://localhost:4000/api/comptes/telephone/'+str(elt['telephone'])
+                achat = requests.put(url,{'nom':banq['nom'],'prenom':banq['prenom'],'email':banq['email'],'telephone':banq['telephone'],'solde':solde})
+                ordre.status= 'possible'
+            ordre.save()
+        return render(request, "stocks/base.html", {'data':list(Ordre.objects.all())})
+    return render(request, "clientele/base.html", {'data':list(Ordre.objects.all())})
